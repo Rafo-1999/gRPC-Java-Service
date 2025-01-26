@@ -1,0 +1,11 @@
+syntax="proto3";
+
+package gRPC;
+
+option java_package="com.proto.gRPC";
+
+option  java_multiple_files=true;
+
+message gRPCMessage {}
+
+service gRPCService {}

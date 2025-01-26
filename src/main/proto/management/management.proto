@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package management;
+
+option  java_package = "com.proto.management";
+option  java_multiple_files = true;
+
+  message ManagementRequest{
+    string first_name=1;
+  }
+
+  message ManagementResponse{
+    string result=1;
+  }
+  service ManagementService{
+    rpc manage(ManagementRequest) returns (ManagementResponse);
+    rpc manageManyTimes(ManagementRequest) returns(stream ManagementResponse);
+    rpc longManage(stream ManagementRequest) returns (ManagementResponse);
+  }
