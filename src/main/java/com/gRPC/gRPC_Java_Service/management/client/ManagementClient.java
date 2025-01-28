@@ -3,8 +3,11 @@ package com.gRPC.gRPC_Java_Service.management.client;
 import com.proto.management.ManagementRequest;
 import com.proto.management.ManagementResponse;
 import com.proto.management.ManagementServiceGrpc;
+import io.grpc.Deadline;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,11 +18,11 @@ import java.util.concurrent.TimeUnit;
 import org.springframework.stereotype.Component;
 
 @Component
-public class Management_Client {
+public class ManagementClient {
 
   public static void main(String[] args) throws InterruptedException {
 
-    getChannel(new String[]{"manageEveryone"});
+    getChannel(new String[]{"manageWithDeadline"});
   }
 
 
@@ -45,6 +48,9 @@ public class Management_Client {
       case "manageEveryone":
         doManageEveryone(channel);
         break;
+      case "manageWithDeadline":
+        doManageWithDeadline(channel);
+        break;
       default:
         System.out.println("Keyword invalid " + args[0]);
     }
@@ -54,7 +60,6 @@ public class Management_Client {
 
     return channel;
   }
-
 
   private static void doManage(ManagedChannel channel) {
     System.out.println("Enter doManage");
@@ -149,6 +154,30 @@ public class Management_Client {
     manage.onCompleted();
     countDownLatch.await(3,TimeUnit.SECONDS);
 
+  }
+
+
+  private static void doManageWithDeadline(ManagedChannel channel) {
+    System.out.println("Enter doManageWithDeadline");
+    ManagementServiceGrpc.ManagementServiceBlockingStub stub = ManagementServiceGrpc.newBlockingStub(channel);
+    ManagementResponse response = stub.withDeadline(Deadline.after(3,TimeUnit.SECONDS))
+        .manageWithDeadline(ManagementRequest.newBuilder().setFirstName("Jack").build());
+
+    System.out.println("manage with deadline response: " + response.getResult());
+
+    try {
+      response=stub.withDeadline(Deadline.after(100,TimeUnit.MILLISECONDS))
+          .manageWithDeadline(ManagementRequest.newBuilder().setFirstName("Jack").build());
+
+      System.out.println("manage with deadline response: " + response.getResult());
+    }catch (StatusRuntimeException e){
+      if (e.getStatus().getCode() == Status.Code.DEADLINE_EXCEEDED) {
+        System.out.println("Deadline exceeded");
+      }else {
+        System.out.println("Got an exception in manageWithDeadline");
+        e.printStackTrace();
+      }
+    }
   }
 
 

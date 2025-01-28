@@ -7,8 +7,11 @@ import com.proto.calculator.MaxRequest;
 import com.proto.calculator.MaxResponse;
 import com.proto.calculator.PrimeRequest;
 import com.proto.calculator.PrimeResponse;
+import com.proto.calculator.SqrtRequest;
+import com.proto.calculator.SqrtResponse;
 import com.proto.calculator.SumRequest;
 import com.proto.calculator.SumResponse;
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 
 public class CalculatorServerImpl extends CalculatorServiceGrpc.CalculatorServiceImplBase {
@@ -90,5 +93,23 @@ public class CalculatorServerImpl extends CalculatorServiceGrpc.CalculatorServic
         responseObserver.onCompleted();
       }
     };
+  }
+
+  @Override
+  public void sqrt(SqrtRequest request,StreamObserver<SqrtResponse> responseObserver){
+    int number=request.getNumber();
+
+    if (number<0){
+      responseObserver.onError(Status.INVALID_ARGUMENT
+          .withDescription("The number being sent cannot be negative")
+          .augmentDescription("Number: "+number)
+          .asRuntimeException()
+      );
+      return;
+    }
+    responseObserver.onNext(
+        SqrtResponse.newBuilder().setResult(Math.sqrt(number)).build()
+    );
+    responseObserver.onCompleted();
   }
 }

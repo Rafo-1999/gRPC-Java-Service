@@ -33,6 +33,7 @@ dependencies {
 	implementation 'io.grpc:grpc-services'
 	implementation 'org.springframework.grpc:spring-grpc-spring-boot-starter'
 	compileOnly 'org.projectlombok:lombok'
+	implementation "io.grpc:grpc-services:1.44.1"
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.grpc:spring-grpc-test'

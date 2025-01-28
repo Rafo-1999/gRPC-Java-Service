@@ -3,7 +3,9 @@ package com.gRPC.gRPC_Java_Service.management.server;
 import com.proto.management.ManagementRequest;
 import com.proto.management.ManagementResponse;
 import com.proto.management.ManagementServiceGrpc;
+import io.grpc.Context;
 import io.grpc.stub.StreamObserver;
+import org.checkerframework.checker.units.qual.C;
 
 public class ManagementServerImpl extends ManagementServiceGrpc.ManagementServiceImplBase {
 
@@ -73,5 +75,24 @@ public class ManagementServerImpl extends ManagementServiceGrpc.ManagementServic
         responseObserver.onCompleted();
       }
     };
+  }
+
+  @Override
+  public void manageWithDeadline (ManagementRequest request, StreamObserver<ManagementResponse> responseObserver) {
+    Context context=Context.current();
+
+    try {
+      for (int i = 0; i < 3; ++i) {
+        if (context.isCancelled())
+          return;
+
+        Thread.sleep(100);
+      }
+
+      responseObserver.onNext(ManagementResponse.newBuilder().setResult("Hello " + request.getFirstName()).build());
+      responseObserver.onCompleted();
+    }catch (InterruptedException e){
+      responseObserver.onError(e);
+    }
   }
 }
