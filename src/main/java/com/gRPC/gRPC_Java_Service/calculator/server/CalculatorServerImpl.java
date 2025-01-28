@@ -1,6 +1,10 @@
 package com.gRPC.gRPC_Java_Service.calculator.server;
 
+import com.proto.calculator.AvgRequest;
+import com.proto.calculator.AvgResponse;
 import com.proto.calculator.CalculatorServiceGrpc;
+import com.proto.calculator.MaxRequest;
+import com.proto.calculator.MaxResponse;
 import com.proto.calculator.PrimeRequest;
 import com.proto.calculator.PrimeResponse;
 import com.proto.calculator.SumRequest;
@@ -31,5 +35,60 @@ public class CalculatorServerImpl extends CalculatorServiceGrpc.CalculatorServic
       }
       responseObserver.onCompleted();
     }
+  }
+
+  @Override
+  public StreamObserver<AvgRequest> avg(StreamObserver<AvgResponse> responseObserver){
+    final int[] sum = {0};
+    final int[] count = {0};
+
+    return new StreamObserver<>() {
+
+      @Override
+      public void onNext(AvgRequest avgRequest) {
+        sum[0] +=avgRequest.getNumber();
+        ++count[0];
+      }
+
+      @Override
+      public void onError(Throwable throwable) {
+
+        responseObserver.onError(throwable);
+      }
+
+      @Override
+      public void onCompleted() {
+      responseObserver.onNext(AvgResponse.newBuilder().setResult(
+          (double) sum[0] / count[0]
+      ).build());
+      responseObserver.onCompleted();
+      }
+    };
+  }
+
+  @Override
+  public StreamObserver<MaxRequest> max(StreamObserver<MaxResponse> responseObserver){
+    return new StreamObserver<>() {
+
+      int max=Integer.MIN_VALUE;
+      @Override
+      public void onNext(MaxRequest maxRequest) {
+
+        if (maxRequest.getNumber()>max){
+          max=maxRequest.getNumber();
+          responseObserver.onNext(MaxResponse.newBuilder().setMax(max).build());
+        }
+      }
+
+      @Override
+      public void onError(Throwable throwable) {
+      responseObserver.onError(throwable);
+      }
+
+      @Override
+      public void onCompleted() {
+        responseObserver.onCompleted();
+      }
+    };
   }
 }

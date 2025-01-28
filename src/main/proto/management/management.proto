@@ -16,4 +16,5 @@ option  java_multiple_files = true;
     rpc manage(ManagementRequest) returns (ManagementResponse);
     rpc manageManyTimes(ManagementRequest) returns(stream ManagementResponse);
     rpc longManage(stream ManagementRequest) returns (ManagementResponse);
+    rpc manageEveryone(stream ManagementRequest) returns (stream ManagementResponse);
   }

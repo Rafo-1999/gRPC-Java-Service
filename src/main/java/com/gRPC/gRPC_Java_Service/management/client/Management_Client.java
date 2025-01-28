@@ -7,6 +7,7 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -16,13 +17,13 @@ import org.springframework.stereotype.Component;
 @Component
 public class Management_Client {
 
-public static void main(String[] args) throws InterruptedException {
+  public static void main(String[] args) throws InterruptedException {
 
-    getChannel(new String[]{ "longManage"});
-}
+    getChannel(new String[]{"manageEveryone"});
+  }
 
 
-private static ManagedChannel getChannel(String[] args) throws InterruptedException {
+  private static ManagedChannel getChannel(String[] args) throws InterruptedException {
     if (args.length == 0) {
       System.out.println("Need one argument to work");
       return null;
@@ -31,13 +32,22 @@ private static ManagedChannel getChannel(String[] args) throws InterruptedExcept
     ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 50501).usePlaintext()
         .build();
 
-   switch (args[0]){
-     case "manage":doManage(channel);break;
-     case  "manageManyTimes": doManageManyTimes(channel);break;
-     case "longManage": doLongManage(channel); break;
-     default:
-       System.out.println("Keyword invalid "+args[0]);
-   }
+    switch (args[0]) {
+      case "manage":
+        doManage(channel);
+        break;
+      case "manageManyTimes":
+        doManageManyTimes(channel);
+        break;
+      case "longManage":
+        doLongManage(channel);
+        break;
+      case "manageEveryone":
+        doManageEveryone(channel);
+        break;
+      default:
+        System.out.println("Keyword invalid " + args[0]);
+    }
 
     System.out.println("Shutting Down For Client ...");
     channel.shutdown();
@@ -45,38 +55,42 @@ private static ManagedChannel getChannel(String[] args) throws InterruptedExcept
     return channel;
   }
 
+
   private static void doManage(ManagedChannel channel) {
     System.out.println("Enter doManage");
-    ManagementServiceGrpc.ManagementServiceBlockingStub stub = ManagementServiceGrpc.newBlockingStub(channel);
+    ManagementServiceGrpc.ManagementServiceBlockingStub stub = ManagementServiceGrpc.newBlockingStub(
+        channel);
 
-    ManagementResponse response=stub.manage(ManagementRequest.newBuilder().setFirstName("Jack").build());
+    ManagementResponse response = stub.manage(
+        ManagementRequest.newBuilder().setFirstName("Jack").build());
 
-    System.out.println("Management response: "+response.getResult());
+    System.out.println("Management response: " + response.getResult());
   }
-
 
 
   private static void doManageManyTimes(ManagedChannel channel) {
 
     System.out.println("Enter doManageManyTimes");
 
-    ManagementServiceGrpc.ManagementServiceBlockingStub stub = ManagementServiceGrpc.newBlockingStub(channel);
-    stub.manageManyTimes(ManagementRequest.newBuilder().setFirstName("Jack").build()).forEachRemaining(
-        managementResponse-> System.out.println(managementResponse.getResult())
-    );
+    ManagementServiceGrpc.ManagementServiceBlockingStub stub = ManagementServiceGrpc.newBlockingStub(
+        channel);
+    stub.manageManyTimes(ManagementRequest.newBuilder().setFirstName("Jack").build())
+        .forEachRemaining(
+            managementResponse -> System.out.println(managementResponse.getResult())
+        );
 
   }
 
   private static void doLongManage(ManagedChannel channel) throws InterruptedException {
     System.out.println("Enter doLongManage");
 
-    ManagementServiceGrpc.ManagementServiceStub stub=ManagementServiceGrpc.newStub(channel);
-    List<String> names=new ArrayList<>();
-    CountDownLatch countDownLatch=new CountDownLatch(1);
+    ManagementServiceGrpc.ManagementServiceStub stub = ManagementServiceGrpc.newStub(channel);
+    List<String> names = new ArrayList<>();
+    CountDownLatch countDownLatch = new CountDownLatch(1);
 
-    Collections.addAll(names,"Jack","Marie","Daniel");
+    Collections.addAll(names, "Jack", "Marie", "Daniel");
 
-    StreamObserver<ManagementRequest> streamObserver=stub.longManage(new StreamObserver<>() {
+    StreamObserver<ManagementRequest> streamObserver = stub.longManage(new StreamObserver<>() {
 
       @Override
       public void onNext(ManagementResponse managementResponse) {
@@ -94,12 +108,47 @@ private static ManagedChannel getChannel(String[] args) throws InterruptedExcept
       }
     });
 
-    for (String name:names){
+    for (String name : names) {
       streamObserver.onNext(ManagementRequest.newBuilder().setFirstName(name).build());
     }
 
     streamObserver.onCompleted();
     countDownLatch.await(3, TimeUnit.SECONDS);
+  }
+
+
+  private static void doManageEveryone(ManagedChannel channel) throws InterruptedException {
+    System.out.println("Enter doManageEveryone");
+
+    ManagementServiceGrpc.ManagementServiceStub stub = ManagementServiceGrpc.newStub(channel);
+    CountDownLatch countDownLatch = new CountDownLatch(1);
+
+
+    StreamObserver<ManagementRequest> manage=stub.manageEveryone(new StreamObserver<>() {
+
+      @Override
+      public void onNext(ManagementResponse managementResponse) {
+        System.out.println(managementResponse.getResult());
+      }
+
+      @Override
+      public void onError(Throwable throwable) {
+
+      }
+
+      @Override
+      public void onCompleted() {
+        countDownLatch.countDown();
+      }
+    });
+
+    Arrays.asList("Jack", "Marie", "Daniel").forEach(name -> {
+      manage.onNext(ManagementRequest.newBuilder().setFirstName(name).build());
+    });
+
+    manage.onCompleted();
+    countDownLatch.await(3,TimeUnit.SECONDS);
+
   }
 
 

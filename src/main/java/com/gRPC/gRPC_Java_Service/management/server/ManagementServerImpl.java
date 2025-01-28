@@ -52,4 +52,26 @@ public class ManagementServerImpl extends ManagementServiceGrpc.ManagementServic
       }
     };
   }
+
+
+  @Override
+  public StreamObserver<ManagementRequest> manageEveryone(StreamObserver<ManagementResponse> responseObserver) {
+    return new StreamObserver<>() {
+
+      @Override
+      public void onNext(ManagementRequest request) {
+        responseObserver.onNext(ManagementResponse.newBuilder().setResult("Hello  " +request.getFirstName()).build());
+      }
+
+      @Override
+      public void onError(Throwable throwable) {
+        responseObserver.onError(throwable);
+      }
+
+      @Override
+      public void onCompleted() {
+        responseObserver.onCompleted();
+      }
+    };
+  }
 }
